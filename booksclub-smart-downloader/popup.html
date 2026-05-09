@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>BooksClub Smart Downloader</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { width: 220px; background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; }
+    .header { padding: 14px 16px; border-bottom: 1px solid #21262d; display: flex; align-items: center; gap: 10px; }
+    .logo { width: 34px; height: 34px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+    .logo img { width: 100%; height: 100%; }
+    .title { font-size: 13px; font-weight: 600; color: #e6edf3; }
+    .version { font-size: 11px; color: #484f58; font-family: monospace; margin-top: 2px; }
+    .stat { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .stat-label { color: #484f58; font-size: 12px; }
+    .stat-value { color: #00c853; font-weight: 700; font-size: 22px; }
+    .footer { padding: 8px 16px; border-top: 1px solid #21262d; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #30363d; }
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: #00c853; animation: p 2s infinite; }
+    @keyframes p { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo"><img src="icons/icon48.png" alt=""></div>
+    <div>
+      <div class="title">Smart Downloader</div>
+      <div class="version" id="ver">v1.5.3</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Downloaded total</span>
+    <span class="stat-value" id="dl-count">0</span>
+  </div>
+  <div class="footer">
+    <div class="dot"></div>
+    <span>booksclub.pl &amp; mega.nz</span>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

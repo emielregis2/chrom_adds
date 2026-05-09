@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "BooksClub Smart Downloader v1.5.3",
+  "version": "1.5.3",
+  "description": "Inteligentne pobieranie audiobooków i ebooków z booksclub.pl",
+  "permissions": [
+    "tabs",
+    "storage",
+    "scripting",
+    "activeTab",
+    "alarms",
+    "downloads",
+    "downloads.shelf"
+  ],
+  "host_permissions": [
+    "https://booksclub.pl/*",
+    "https://mega.nz/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://booksclub.pl/*"],
+      "js": ["content_booksclub.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": ["https://mega.nz/*"],
+      "js": ["content_mega.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

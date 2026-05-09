@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>BooksClub Smart Downloader</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d1117; --bg2: #161b22; --bg3: #21262d;
+      --border: #30363d; --text: #c9d1d9; --dim: #8b949e; --mute: #484f58;
+      --green: #00c853; --red: #f85149; --yellow: #d29922;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
+    .header { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg); z-index: 100; }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .logo { width: 30px; height: 30px; background: var(--green); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+    .header-title { font-size: 14px; font-weight: 600; color: #e6edf3; }
+    .header-ver { font-size: 11px; color: var(--mute); font-family: monospace; }
+    .header-stat { font-size: 11px; color: var(--dim); text-align: right; }
+    .header-stat strong { display: block; font-size: 20px; font-weight: 700; color: var(--green); line-height: 1; }
+    .toolbar { padding: 10px 20px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .folder-row { flex: 1; min-width: 200px; display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; }
+    .folder-status { flex: 1; font-size: 12px; color: var(--green); }
+    .btn-settings { flex-shrink: 0; background: var(--bg3); color: var(--dim); border: 1px solid var(--border); border-radius: 4px; padding: 4px 12px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+    .btn-settings:hover { background: var(--border); color: var(--text); }
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity 0.15s; }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn:not(:disabled):hover { opacity: 0.85; }
+    .btn-primary { background: var(--green); color: #000; }
+    .btn-danger { background: #2a1117; color: var(--red); border: 1px solid #3a1a1f; }
+    .btn-ghost { background: var(--bg); color: var(--dim); border: 1px solid var(--border); }
+    .progress { padding: 8px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); display: none; }
+    .progress.show { display: block; }
+    .prog-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--mute); margin-bottom: 5px; }
+    .prog-label { color: var(--green); max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .prog-track { height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+    .prog-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.4s; }
+    .main { padding: 16px 20px; }
+    .state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; gap: 10px; color: var(--mute); font-size: 13px; }
+    .spinner { width: 26px; height: 26px; border: 2px solid var(--bg3); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .list-header { display: flex; align-items: center; padding: 6px 0 10px; border-bottom: 1px solid var(--bg3); margin-bottom: 4px; }
+    .list-header label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 12px; color: var(--dim); user-select: none; }
+    .cb-wrap { position: relative; width: 18px; height: 18px; flex-shrink: 0; }
+    .cb-wrap input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; margin: 0; }
+    .cb-box { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; background: var(--bg2); display: flex; align-items: center; justify-content: center; transition: all 0.15s; pointer-events: none; }
+    .cb-wrap input:checked ~ .cb-box { background: var(--green); border-color: var(--green); }
+    .cb-wrap input:checked ~ .cb-box::after { content: '✓'; color: #000; font-size: 12px; font-weight: 700; line-height: 1; }
+    .cb-wrap input:disabled ~ .cb-box { opacity: 0.4; }
+    .thread-list { display: flex; flex-direction: column; }
+    .t-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; border: 1px solid transparent; transition: background 0.1s; }
+    .t-item:hover:not(.inprogress):not(.done):not(.nofile) { background: var(--bg2); }
+    .t-item.inprogress { background: #0a2e18; border-color: #1a4a2a; }
+    .t-item.done { background: #080f0a; border-color: #0f2a14; opacity: 0.6; }
+    .t-item.nofile { opacity: 0.4; }
+    .t-item.error { background: #1f0a0a; border-color: #3a1a1a; }
+    .t-icon { flex-shrink: 0; font-size: 13px; width: 18px; text-align: center; color: var(--dim); }
+    .t-title { flex: 1; font-size: 13px; line-height: 1.4; }
+    .t-item.done .t-title { color: var(--mute); }
+    .t-badge { flex-shrink: 0; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+    .b-wait { background: var(--bg3); color: var(--mute); }
+    .b-prog { background: #0a3520; color: var(--green); }
+    .b-done { background: #081a0e; color: #3fb950; }
+    .b-none { background: #2a2500; color: var(--yellow); }
+    .b-err  { background: #2a0a0a; color: var(--red); }
+    .done-banner { display: none; border: 1px solid #1a4a2a; background: #080f0a; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 16px; }
+    .done-banner.show { display: block; }
+    .done-banner h2 { color: var(--green); font-size: 16px; margin-bottom: 6px; }
+    .done-banner p { color: var(--dim); font-size: 12px; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">📚</div>
+      <div>
+        <div class="header-title">Smart Downloader</div>
+        <div class="header-ver" id="hdr-ver">v1.5.3</div>
+      </div>
+    </div>
+    <div class="header-stat">downloaded total<strong id="total-count">0</strong></div>
+  </div>
+  <div class="toolbar">
+    <div class="folder-row">
+      <span>📁</span>
+      <span id="folder-status" class="folder-status">Auto-save — pliki trafiają do domyślnego folderu Chrome</span>
+      <button class="btn-settings" id="btn-settings">⚙️ Change folder</button>
+    </div>
+    <button class="btn btn-ghost" id="btn-rescan">↺ Refresh</button>
+    <button class="btn btn-primary" id="btn-start" disabled>↓ Download (<span id="sel-count">0</span>)</button>
+    <button class="btn btn-danger" id="btn-stop" style="display:none">■ Stop</button>
+  </div>
+  <div class="progress" id="progress">
+    <div class="prog-meta">
+      <span class="prog-label" id="prog-label">Downloading...</span>
+      <span id="prog-frac">0 / 0</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div class="main">
+    <div class="done-banner" id="done-banner">
+      <h2 id="done-title">✓ All done</h2>
+      <p id="done-text"></p>
+      <p id="done-time" style="color:var(--mute);font-size:11px;margin-bottom:12px;"></p>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-primary" id="btn-retry" style="display:none;padding:9px 20px;font-size:13px;">↺ Retry failed</button>
+        <button class="btn btn-ghost" id="btn-close" style="padding:9px 20px;font-size:13px;">Close panel</button>
+      </div>
+    </div>
+    <div class="state-box" id="st-scan"><div class="spinner"></div><span>Scanning page...</span></div>
+    <div class="state-box" id="st-empty" style="display:none"><span style="font-size:28px">○</span><span>No threads found.</span></div>
+    <div id="list-wrap" style="display:none">
+      <div class="list-header">
+        <label>
+          <div class="cb-wrap"><input type="checkbox" id="check-all" checked><div class="cb-box"></div></div>
+          Select all
+        </label>
+      </div>
+      <div class="thread-list" id="thread-list"></div>
+    </div>
+  </div>
+  <script src="panel.js"></script>
+</body>
+</html>
